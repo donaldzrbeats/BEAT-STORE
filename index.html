@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DonaldZR Beats | Official 3D Store</title>
+  <meta name="description" content="Official beat store for DonaldZR Beats. High-quality instrumentals with instant licensing." />
+  
+  <!-- 3D Graphics Engine: Three.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <style>
+    /* Dark Red & Black Color System */
+    :root {
+      --bg-black: #050203;
+      --card-bg: rgba(18, 4, 7, 0.85);
+      --red-primary: #ff0033;
+      --red-glow: rgba(255, 0, 51, 0.4);
+      --red-dark: #7a0000;
+      --text-main: #ffffff;
+      --text-muted: #b3a2a5;
+      --border-red: rgba(255, 0, 51, 0.25);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: var(--bg-black);
+      color: var(--text-main);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* Fixed 3D Portal Canvas in the background */
+    #canvas-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Navigation Bar */
+    header {
+      position: sticky;
+      top: 0;
+      background: rgba(8, 1, 3, 0.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-red);
+      z-index: 100;
+    }
+
+    .nav-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 20px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .logo {
+      font-size: 1.4rem;
+      font-weight: 900;
+      letter-spacing: 2px;
+      color: var(--text-main);
+      text-decoration: none;
+      text-transform: uppercase;
+      text-shadow: 0 0 10px var(--red-glow);
+    }
+    .logo span { color: var(--red-primary); }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      margin-left: 24px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: color 0.3s, text-shadow 0.3s;
+    }
+
+    .nav-links a:hover {
+      color: var(--red-primary);
+      text-shadow: 0 0 8px var(--red-primary);
+    }
+
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      padding: 85px 20px 45px;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.2rem, 5.5vw, 3.8rem);
+      font-weight: 900;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      letter-spacing: -1px;
+      text-shadow: 0 0 24px rgba(255, 0, 51, 0.5);
+    }
+
+    .hero p {
+      color: var(--text-muted);
+      font-size: 1.15rem;
+      max-width: 650px;
+      margin: 0 auto 30px;
+    }
+
+    .cta-btn {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--red-primary), var(--red-dark));
+      color: #fff;
+      font-weight: 800;
+      padding: 14px 34px;
+      border-radius: 6px;
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 0 20px var(--red-glow);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .cta-btn:hover {
+      transform: translateY(-3px) scale(1.03);
+      box-shadow: 0 0 35px rgba(255, 0, 51, 0.85);
+    }
+
+    /* Main Sections */
+    section { padding: 60px 0; }
+    .section-title {
+      text-align: center;
+      font-size: 2.2rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .section-subtitle {
+      text-align: center;
+      color: var(--text-muted);
+      margin-bottom: 45px;
+    }
+
+    /* BeatStars Embedded Player */
+    .player-wrapper {
+      width: 100%;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid var(--border-red);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8), 0 0 25px var(--red-glow);
+      background-color: var(--card-bg);
+      backdrop-filter: blur(8px);
+    }
+
+    .player-wrapper iframe {
+      width: 100%;
+      height: 760px;
+      border: none;
+      display: block;
+    }
+
+    /* 3D Interactive Card Grid */
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 28px;
+      perspective: 1000px;
+    }
+
+    .card-3d {
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border-red);
+      border-radius: 12px;
+      padding: 35px 25px;
+      text-align: center;
+      transform-style: preserve-3d;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .card-3d:hover {
+      border-color: var(--red-primary);
+      box-shadow: 0 10px 30px var(--red-glow);
+    }
+
+    .card-3d h3 {
+      font-size: 1.4rem;
+      margin-bottom: 10px;
+      transform: translateZ(20px);
+    }
+
+    .card-3d .price {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--red-primary);
+      margin-bottom: 20px;
+      transform: translateZ(30px);
+      text-shadow: 0 0 12px var(--red-glow);
+    }
+
+    .card-3d ul {
+      list-style: none;
+      text-align: left;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      transform: translateZ(15px);
+    }
+
+    .card-3d ul li {
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-3d ul li::before {
+      content: "✦";
+      color: var(--red-primary);
+    }
+
+    /* Contact Cards */
+    .contact-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      max-width: 750px;
+      margin: 0 auto;
+      perspective: 1000px;
+    }
+
+    .contact-card-3d {
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border-red);
+      border-radius: 12px;
+      padding: 30px;
+      text-decoration: none;
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transform-style: preserve-3d;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .contact-card-3d:hover {
+      border-color: var(--red-primary);
+      box-shadow: 0 10px 30px var(--red-glow);
+    }
+
+    .contact-card-3d svg {
+      width: 42px;
+      height: 42px;
+      fill: var(--red-primary);
+      margin-bottom: 12px;
+      transform: translateZ(25px);
+      filter: drop-shadow(0 0 8px var(--red-primary));
+    }
+
+    .contact-card-3d .label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      transform: translateZ(15px);
+    }
+
+    .contact-card-3d .value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-top: 6px;
+      transform: translateZ(20px);
+    }
+
+    footer {
+      border-top: 1px solid var(--border-red);
+      padding: 35px 20px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      background: rgba(5, 2, 3, 0.95);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Fullscreen 3D WebGL Background -->
+  <div id="canvas-container"></div>
+
+  <!-- Header Navigation -->
+  <header>
+    <div class="nav-container">
+      <a href="#" class="logo">DonaldZR <span>Beats</span></a>
+      <nav class="nav-links">
+        <a href="#store">Beats</a>
+        <a href="#licensing">Licensing</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Banner -->
+  <section class="hero">
+    <div class="container">
+      <h1>Dark Royalty Instrumentals</h1>
+      <p>Instant untagged MP3, WAV, and Stem downloads with automated licensing contracts.</p>
+      <a href="#store" class="cta-btn">Explore Beats</a>
+    </div>
+  </section>
+
+  <!-- BeatStars Store Player -->
+  <section id="store">
+    <div class="container">
+      <div class="player-wrapper">
+        <!-- Replace src with your BeatStars Blaze Player URL -->
+        <iframe 
+          src="https://player.beatstars.com/?storeId=YOUR_BEATSTARS_ID" 
+          title="DonaldZR Beats Player"
+          allow="autoplay">
+        </iframe>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3D Interactive Licensing Terms -->
+  <section id="licensing">
+    <div class="container">
+      <h2 class="section-title">License Agreements</h2>
+      <p class="section-subtitle">Select the right license for your release</p>
+      
+      <div class="grid-3">
+        <div class="card-3d">
+          <h3>Standard MP3</h3>
+          <div class="price">$29.99</div>
+          <ul>
+            <li>Untagged Audio (MP3)</li>
+            <li>100,000 Audio Streams</li>
+            <li>1 Commercial Release</li>
+            <li>Instant Contract Email</li>
+          </ul>
+        </div>
+
+        <div class="card-3d">
+          <h3>Premium WAV</h3>
+          <div class="price">$49.99</div>
+          <ul>
+            <li>Untagged 24-Bit WAV + MP3</li>
+            <li>500,000 Audio Streams</li>
+            <li>Music Video Rights</li>
+            <li>Instant Contract Email</li>
+          </ul>
+        </div>
+
+        <div class="card-3d">
+          <h3>Trackout Stems</h3>
+          <div class="price">$99.99</div>
+          <ul>
+            <li>Full Audio Stems + WAV</li>
+            <li>Unlimited Audio Streams</li>
+            <li>Radio Broadcasting Rights</li>
+            <li>Full Mixing Control</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact & Social Inquiries -->
+  <section id="contact">
+    <div class="container">
+      <h2 class="section-title">Connect & Inquire</h2>
+      <p class="section-subtitle">Custom production inquiries, exclusive licenses, or collaborations</p>
+      
+      <div class="contact-grid">
+        <a href="mailto:donaldzrbeats@gmail.com" class="contact-card-3d">
+          <svg viewBox="0 0 24 24">
+            <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+          </svg>
+          <span class="label">Email Contact</span>
+          <span class="value">donaldzrbeats@gmail.com</span>
+        </a>
+
+        <a href="https://instagram.com/donaldzrbeats" target="_blank" rel="noopener noreferrer" class="contact-card-3d">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+          </svg>
+          <span class="label">Direct Message</span>
+          <span class="value">@donaldzrbeats</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>&copy; 2026 DonaldZR Beats. Powered by BeatStars & Three.js.</p>
+  </footer>
+
+  <!-- Interactive JavaScript Engine -->
+  <script>
+    /* 1. THREE.JS 3D CONCENTRIC RED & BLACK PORTAL */
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.z = 25;
+
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    container.appendChild(renderer.domElement);
+
+    // Generate Concentric Wireframe Torus Rings
+    const rings = [];
+    const ringCount = 8;
+    for (let i = 0; i < ringCount; i++) {
+      const radius = 3 + i * 2.8;
+      const tube = 0.08 + (i * 0.015);
+      const geometry = new THREE.TorusGeometry(radius, tube, 16, 100);
+      
+      const material = new THREE.MeshBasicMaterial({
+        color: i % 2 === 0 ? 0xff0033 : 0x7a0000,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.6 - (i * 0.05)
+      });
+
+      const ring = new THREE.Mesh(geometry, material);
+      ring.rotation.x = Math.PI / 4;
+      scene.add(ring);
+      rings.push(ring);
+    }
+
+    // Dynamic Mouse Tracking for Parallax Camera Movement
+    let mouseX = 0, mouseY = 0;
+    window.addEventListener('mousemove', (e) => {
+      mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+      mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+    });
+
+    // Animation Loop
+    function animate() {
+      requestAnimationFrame(animate);
+
+      // Rotate concentric rings at offset speeds
+      rings.forEach((ring, index) => {
+        ring.rotation.z += 0.002 * (index % 2 === 0 ? 1 : -1);
+        ring.rotation.x += 0.001 * (index + 1);
+      });
+
+      // Smooth camera interpolation toward mouse position
+      camera.position.x += (mouseX * 4 - camera.position.x) * 0.05;
+      camera.position.y += (-mouseY * 4 - camera.position.y) * 0.05;
+      camera.lookAt(scene.position);
+
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // Responsive Canvas Resize Listener
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    /* 2. 3D CARD TILT ON MOUSE HOVER */
+    const cards = document.querySelectorAll('.card-3d, .contact-card-3d');
+
+    cards.forEach(card => {
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left - rect.width / 2;
+        const y = e.clientY - rect.top - rect.height / 2;
+
+        const rotateX = (-y / rect.height) * 20;
+        const rotateY = (x / rect.width) * 20;
+
+        card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(10px)`;
+      });
+
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateZ(0px)';
+      });
+    });
+  </script>
+</body>
+</html>
