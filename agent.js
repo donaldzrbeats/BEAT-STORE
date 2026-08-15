@@ -1,11 +1,27 @@
 /**
  * Interactive Gemini Website Build Agent
- * Updated to use the active gemini-3.7-flash model endpoint.
+ * Includes automated Git Add, Commit, and Push workflow.
  */
 
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
+const { execSync } = require('child_process');
+
+// Automatically load variables from .env if present
+const ENV_FILE = path.join(__dirname, '.env');
+if (fs.existsSync(ENV_FILE)) {
+  const envContent = fs.readFileSync(ENV_FILE, 'utf8');
+  envContent.split('\n').forEach(line => {
+    const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
+    if (match) {
+      const key = match[1];
+      let value = match[2] || '';
+      value = value.replace(/(^['"]|['"]$)/g, '').trim();
+      process.env[key] = value;
+    }
+  });
+}
 
 const HTML_FILE = path.join(__dirname, 'index.html');
 const BACKUP_FILE = path.join(__dirname, 'index.html.bak');
@@ -116,13 +132,58 @@ function revertBackup() {
   console.log('\n🔄 Reverted index.html to the previous backup state successfully.\n');
 }
 
+function checkGitStatus() {
+  console.log('\n📄 Current Git Status:');
+  try {
+    const status = execSync('git status --short', { encoding: 'utf8' });
+    if (status.trim()) {
+      console.log(status);
+    } else {
+      console.log('✨ Working tree clean. No unsaved changes.\n');
+    }
+  } catch (err) {
+    console.error('❌ Could not check git status:', err.message);
+  }
+}
+
+async function gitPushWorkflow() {
+  console.log('\n==============================================');
+  console.log('     🚀 Automated Git Add, Commit & Push     ');
+  console.log('==============================================');
+
+  const customMessage = await prompt('Enter a commit message (or press Enter for default): ');
+  const commitMessage = customMessage.trim() || 'Update beat store website via Gemini Agent';
+
+  try {
+    console.log('\n📦 [1/4] Staging changes (git add .)...');
+    execSync('git add .', { stdio: 'inherit' });
+
+    console.log(`📝 [2/4] Committing changes ("${commitMessage}")...`);
+    try {
+      execSync(`git commit -m "${commitMessage.replace(/"/g, '\\"')}"`, { stdio: 'inherit' });
+    } catch (commitErr) {
+      console.log('ℹ️ Note: No new changes detected to commit.');
+    }
+
+    console.log('🔄 [3/4] Synchronizing with remote (git pull --rebase origin main)...');
+    execSync('git pull --rebase origin main', { stdio: 'inherit' });
+
+    console.log('🚀 [4/4] Pushing to GitHub (git push origin main)...');
+    execSync('git push origin main', { stdio: 'inherit' });
+
+    console.log('\n🎉 SUCCESS! All changes have been pushed to GitHub.');
+    console.log('🌐 GitHub Pages is now deploying your updated live website!\n');
+  } catch (error) {
+    console.error('\n❌ Git push process failed:', error.message, '\n');
+  }
+}
+
 async function main() {
   const apiKey = process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
-    console.error('\n❌ ERROR: GEMINI_API_KEY environment variable is not set.');
-    console.log('👉 Run this command in your terminal first:');
-    console.log('   export GEMINI_API_KEY="your_api_key_here"\n');
+    console.error('\n❌ ERROR: GEMINI_API_KEY is not set in your .env file.');
+    console.log('👉 Make sure you have a .env file containing: GEMINI_API_KEY="your_key"\n');
     rl.close();
     process.exit(1);
   }
@@ -137,9 +198,11 @@ async function main() {
     console.log('Choose an action:');
     console.log(' [1] 🛠️  Modify website with Gemini');
     console.log(' [2] 🔄 Revert last change (restore backup)');
-    console.log(' [3] 🚪 Exit Agent');
+    console.log(' [3] 📄 View Git status');
+    console.log(' [4] 🚀 Save & Push to GitHub (git add, commit, push)');
+    console.log(' [5] 🚪 Exit Agent');
 
-    const choice = await prompt('\nEnter choice (1-3): ');
+    const choice = await prompt('\nEnter choice (1-5): ');
 
     switch (choice.trim()) {
       case '1':
@@ -149,12 +212,18 @@ async function main() {
         revertBackup();
         break;
       case '3':
+        checkGitStatus();
+        break;
+      case '4':
+        await gitPushWorkflow();
+        break;
+      case '5':
         console.log('\nExiting agent. Happy coding!\n');
         running = false;
         rl.close();
         break;
       default:
-        console.log('\n⚠️ Invalid option. Please enter 1, 2, or 3.\n');
+        console.log('\n⚠️ Invalid option. Please enter a number between 1 and 5.\n');
     }
   }
 }

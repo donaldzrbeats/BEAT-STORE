@@ -1,0 +1,9 @@
+# Protect environment variables and credentials
+.env
+*.env
+
+# Local backups
+*.bak
+
+# Node dependencies
+node_modules/
